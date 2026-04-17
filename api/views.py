@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 
+
 def _cors(response):
     response["Access-Control-Allow-Origin"] = "*"
     response["Access-Control-Allow-Methods"] = "GET, OPTIONS"
