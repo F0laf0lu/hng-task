@@ -1,154 +1,89 @@
-
 from rest_framework.response import Response
-from rest_framework import status
 from rest_framework.views import APIView
+from rest_framework import status
+
+from core.models import Profile
 from core.serializers import ProfileSerializer
-from core .models import Profile
-import requests
+from core.services import ExternalAPIError, agify, genderize, nationalize
 
-
-def _cors(response):
-    response["Access-Control-Allow-Origin"] = "*"
-    response["Access-Control-Allow-Methods"] = "GET, OPTIONS"
-    response["Access-Control-Allow-Headers"] = "*"
-    return response
 
 def _error(message, status_code):
-    return _cors(Response({"status": "error", "message": message}, status=status_code))
+    return Response({"status": "error", "message": message}, status=status_code)
 
 
-def genderize(name):
-    try:
-        api_response = requests.get(
-            "https://api.genderize.io/",    
-            params={"name": name},
-            timeout=10,
-        )
-        api_response.raise_for_status()
-        data = api_response.json()
-    except requests.Timeout:
-        return _error("Genderize API request timed out", status.HTTP_502_BAD_GATEWAY)
-    except requests.RequestException:
-        return _error("Failed to reach Genderize API", status.HTTP_502_BAD_GATEWAY)
-    except ValueError:
-        return _error("Genderize returned an invalid response", status.HTTP_502_BAD_GATEWAY)
-    
-    gender = data.get("gender")
-    probability = data.get("probability")
-    sample_size = data.get("count")
-
-    if gender is None or sample_size in (None, 0):
-        return _error("Genderize returned an invalid response", status.HTTP_502_BAD_GATEWAY)
-    
-    try:
-        probability = float(probability)
-        sample_size = int(sample_size)
-    except (TypeError, ValueError):
-        return _error("Genderize returned an invalid response", status.HTTP_502_BAD_GATEWAY)
-    
-    return {
-        "gender" : gender,
-        "gender_probability" : probability,
-        "sample_size" : sample_size
-    }
-
-def agify(name):
-    try:
-        api_response = requests.get(
-            "https://api.agify.io/",    
-            params={"name": name},
-            timeout=10,
-        )
-        api_response.raise_for_status()
-        data = api_response.json()
-    except requests.Timeout:
-        return _error("Agify API request timed out", status.HTTP_502_BAD_GATEWAY)
-    except requests.RequestException:
-        return _error("Failed to reach Agify API", status.HTTP_502_BAD_GATEWAY)
-    except ValueError:
-        return _error("Agify returned an invalid response", status.HTTP_502_BAD_GATEWAY)
-    
-    age = data.get("age")
-
-    if age is None:
-        return _error("Agify returned an invalid response", status.HTTP_502_BAD_GATEWAY)
-
-    try:
-        age = int(age)
-    except (TypeError, ValueError):
-        return _error("Agify returned an invalid response", status.HTTP_502_BAD_GATEWAY)
-    age_group = ""
-    if age >= 60:
-        age_group = "senior"
-    elif age >= 20 and age < 60:
-        age_group = "adult"
-    elif age >= 13 and age < 19:
-        age_group = "teenager"
-    else:
-        age_group = "child"
-
-    return {
-        "age" : age,
-        "age_group" : age_group
-    }
-
-
-def nationalize(name):
-    try:
-        api_response = requests.get(
-            "https://api.nationalize.io/",    
-            params={"name": name},
-            timeout=10,
-        )
-        api_response.raise_for_status()
-        data = api_response.json()
-    except requests.Timeout:
-        return _error("Nationalize API request timed out", status.HTTP_502_BAD_GATEWAY)
-    except requests.RequestException:
-        return _error("Failed to reach Nationalize API", status.HTTP_502_BAD_GATEWAY)
-    except ValueError:
-        return _error("Nationalize returned an invalid response", status.HTTP_502_BAD_GATEWAY)
-    
-    country_list = data.get('country')
-
-    if len(country_list) < 0:
-        return _error("Nationalize returned an invalid response", status.HTTP_502_BAD_GATEWAY)
-    
-    max_probability = 0
-    print(max_probability)
-    country = None
-    for i in country_list:
-        if i['probability'] > max_probability:
-            max_probability = i['probability']
-            country = i
-    return {
-        "country_id" : country["country_id"],
-        "country_probability" : country["probability"]
-    }
-
-
-class ProfileCreateView(APIView):
-    serializer_class = ProfileSerializer
-    queryset = Profile
-
+class ProfileListCreateView(APIView):
     def post(self, request, *args, **kwargs):
-        serializer = ProfileSerializer(data=request.data)
+        if "name" not in request.data:
+            return _error("'name' is required", status.HTTP_400_BAD_REQUEST)
 
-        if not serializer.is_valid():
-            return _error(message=serializer.errors, status_code=status.HTTP_400_BAD_REQUEST)
-        name = serializer.validated_data['name']
-        if name is None or name.strip() == "":
-            return _error("'name' cannot be empty", status.HTTP_400_BAD_REQUEST)
+        name = request.data.get("name")
+
+        if not isinstance(name, str):
+            return _error("'name' must be a string", status.HTTP_422_UNPROCESSABLE_ENTITY)
 
         name = name.strip()
+        if not name:
+            return _error("'name' cannot be empty", status.HTTP_400_BAD_REQUEST)
 
-        genderize_response = genderize(name)
-        agify_response = agify(name)
-        nationalize_response = nationalize(name)
+        existing = Profile.objects.filter(name__iexact=name).first()
+        if existing:
+            return Response(
+                {
+                    "status": "success",
+                    "message": "Profile already exists",
+                    "data": ProfileSerializer(existing).data,
+                },
+                status=status.HTTP_200_OK,
+            )
 
-        serializer.save(**genderize_response, **agify_response, **nationalize_response)
+        try:
+            enrichment = {
+                **genderize(name),
+                **agify(name),
+                **nationalize(name),
+            }
+        except ExternalAPIError as exc:
+            return _error(exc.message, status.HTTP_502_BAD_GATEWAY)
 
-        return Response({
-            "status":"success",
-            "data": serializer.data
-        }, status=status.HTTP_200_OK)
+        profile = Profile.objects.create(name=name, **enrichment)
+        return Response(
+            {"status": "success", "data": ProfileSerializer(profile).data},
+            status=status.HTTP_201_CREATED,
+        )
+
+    def get(self, request, *args, **kwargs):
+        queryset = Profile.objects.all().order_by("-created_at")
+        for field in ("gender", "country_id", "age_group"):
+            value = request.query_params.get(field)
+            if value:
+                queryset = queryset.filter(**{f"{field}__iexact": value})
+
+        serialized = ProfileSerializer(queryset, many=True).data
+        return Response(
+            {"status": "success", "count": len(serialized), "data": serialized},
+            status=status.HTTP_200_OK,
+        )
+
+
+class ProfileDetailView(APIView):
+    def _get_object(self, id):
+        try:
+            return Profile.objects.get(pk=id)
+        except Profile.DoesNotExist:
+            return None
+
+    def get(self, request, id, *args, **kwargs):
+        profile = self._get_object(id)
+        if profile is None:
+            return _error("Profile not found", status.HTTP_404_NOT_FOUND)
+        return Response(
+            {"status": "success", "data": ProfileSerializer(profile).data},
+            status=status.HTTP_200_OK,
+        )
+
+    def delete(self, request, id, *args, **kwargs):
+        profile = self._get_object(id)
+        if profile is None:
+            return _error("Profile not found", status.HTTP_404_NOT_FOUND)
+        profile.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
