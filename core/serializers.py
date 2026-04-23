@@ -1,5 +1,4 @@
 from rest_framework import serializers
-
 from core.models import Profile
 
 
@@ -13,10 +12,10 @@ class ProfileSerializer(serializers.ModelSerializer):
             "name",
             "gender",
             "gender_probability",
-            "sample_size",
             "age",
             "age_group",
             "country_id",
+            "country_name",
             "country_probability",
             "created_at",
         ]
