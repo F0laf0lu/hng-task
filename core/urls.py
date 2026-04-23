@@ -1,9 +1,10 @@
-from django.urls import path
+from django.urls import re_path
 
 from core.views import ProfileDetailView, ProfileListCreateView, ProfileSearchView
 
 urlpatterns = [
-    path("profiles/search", ProfileSearchView.as_view(), name="profile-search"),
-    path("profiles", ProfileListCreateView.as_view(), name="profile-list-create"),
-    path("profiles/<uuid:id>", ProfileDetailView.as_view(), name="profile-detail"),
+    re_path(r"^profiles/search/?$", ProfileSearchView.as_view(), name="profile-search"),
+    re_path(r"^profiles/?$", ProfileListCreateView.as_view(), name="profile-list-create"),
+    re_path(r"^profiles/(?P<id>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/?$",
+            ProfileDetailView.as_view(), name="profile-detail"),
 ]

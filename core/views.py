@@ -196,8 +196,10 @@ def parse_pagination(request):
 
     if page < 1:
         raise ValueError("'page' must be >= 1")
-    if limit < 1 or limit > 50:
-        raise ValueError("'limit' must be between 1 and 50")
+    if limit < 1:
+        raise ValueError("'limit' must be >= 1")
+
+    limit = min(limit, 50)
 
     return page, limit
 
