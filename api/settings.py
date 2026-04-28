@@ -128,3 +128,5 @@ STATIC_URL = 'static/'
 #         'rest_framework.renderers.JSONRenderer',
 #     ]
 # }
+
+AUTH_USER_MODEL = 'core.User'
