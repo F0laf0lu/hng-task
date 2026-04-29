@@ -1,3 +1,7 @@
+
+
+name: Lint
+on: [push, pull_request]
 jobs:
   ruff:
     runs-on: ubuntu-latest
