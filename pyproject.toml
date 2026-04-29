@@ -1,0 +1,20 @@
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+exclude = [
+    ".git",
+    ".venv",
+    "dist",
+    "build",
+    "__pycache__",
+    "migrations"
+]
+
+[tool.ruff.lint]
+# Enable Pyflakes (F), Pycodestyle (E, W), isort (I), and Django-specific rules (DJ)
+select = ["F", "E", "W", "I", "DJ"]
+ignore = ["E203"] # Common conflict with formatting
+
+[tool.ruff.lint.isort]
+
+known-first-party = ["api"]
