@@ -1,13 +1,12 @@
 import re
 
-
-
 VALID_SORT_FIELDS = {"age", "created_at", "gender_probability"}
 VALID_AGE_GROUPS = {"child", "teenager", "adult", "senior"}
 
 # ---------------------------------------------------------------------------
 # Natural-language query parser (rule-based only, no AI/LLMs)
 # ---------------------------------------------------------------------------
+
 
 def parse_nl_query(q: str) -> dict | None:
     """
@@ -20,40 +19,40 @@ def parse_nl_query(q: str) -> dict | None:
     filters = {}
 
     # --- Gender ---
-    if re.search(r'\bmales?\b', q) and not re.search(r'\bfemales?\b', q):
+    if re.search(r"\bmales?\b", q) and not re.search(r"\bfemales?\b", q):
         filters["gender"] = "male"
-    elif re.search(r'\bfemales?\b', q) and not re.search(r'\bmales?\b', q):
+    elif re.search(r"\bfemales?\b", q) and not re.search(r"\bmales?\b", q):
         filters["gender"] = "female"
     # "male and female" → no gender filter (both)
 
     # --- Age group / "young" mapping ---
     # "young" is parsed as 16–24, not a stored age group
-    if re.search(r'\byoung\b', q):
+    if re.search(r"\byoung\b", q):
         filters["min_age"] = 16
         filters["max_age"] = 24
-    elif re.search(r'\bteenagers?\b', q):
+    elif re.search(r"\bteenagers?\b", q):
         filters["age_group"] = "teenager"
-    elif re.search(r'\bchildren\b|\bchild\b|\bkids?\b', q):
+    elif re.search(r"\bchildren\b|\bchild\b|\bkids?\b", q):
         filters["age_group"] = "child"
-    elif re.search(r'\bseniors?\b|\belderly\b|\bold people\b', q):
+    elif re.search(r"\bseniors?\b|\belderly\b|\bold people\b", q):
         filters["age_group"] = "senior"
-    elif re.search(r'\badults?\b', q):
+    elif re.search(r"\badults?\b", q):
         filters["age_group"] = "adult"
 
     # --- Explicit age bounds ("above X", "over X", "below X", "under X") ---
-    above_match = re.search(r'\b(?:above|over|older than)\s+(\d+)\b', q)
+    above_match = re.search(r"\b(?:above|over|older than)\s+(\d+)\b", q)
     if above_match:
         filters["min_age"] = int(above_match.group(1)) + 1
 
-    below_match = re.search(r'\b(?:below|under|younger than)\s+(\d+)\b', q)
+    below_match = re.search(r"\b(?:below|under|younger than)\s+(\d+)\b", q)
     if below_match:
         filters["max_age"] = int(below_match.group(1))
 
     # --- Country ---
     # Try "from <country>" or "in <country>"
     country_match = re.search(
-        r'\b(?:from|in)\s+([a-z][a-z\s\-\']+?)(?:\s+(?:who|that|with|and|above|below|over|under)|$)',
-        q
+        r"\b(?:from|in)\s+([a-z][a-z\s\-\']+?)(?:\s+(?:who|that|with|and|above|below|over|under)|$)",
+        q,
     )
     if country_match:
         filters["country_name"] = country_match.group(1).strip()

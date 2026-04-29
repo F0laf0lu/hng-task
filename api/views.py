@@ -5,7 +5,6 @@ from rest_framework.response import Response
 from rest_framework import status
 
 
-
 def _cors(response):
     response["Access-Control-Allow-Origin"] = "*"
     response["Access-Control-Allow-Methods"] = "GET, OPTIONS"
@@ -16,10 +15,11 @@ def _cors(response):
 def _error(message, status_code):
     return _cors(Response({"status": "error", "message": message}, status=status_code))
 
+
 class IndexView(APIView):
 
     def get(self, request, *args, **kwargs):
-        return Response({"status":"success", "message":"Welcome"}, status=status.HTTP_200_OK)
+        return Response({"status": "success", "message": "Welcome"}, status=status.HTTP_200_OK)
 
 
 class ClassifyView(APIView):
@@ -72,17 +72,19 @@ class ClassifyView(APIView):
         is_confident = probability >= 0.7 and sample_size >= 100
         processed_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
-        return _cors(Response(
-            {
-                "status": "success",
-                "data": {
-                    "name": name,
-                    "gender": gender,
-                    "probability": probability,
-                    "sample_size": sample_size,
-                    "is_confident": is_confident,
-                    "processed_at": processed_at,
+        return _cors(
+            Response(
+                {
+                    "status": "success",
+                    "data": {
+                        "name": name,
+                        "gender": gender,
+                        "probability": probability,
+                        "sample_size": sample_size,
+                        "is_confident": is_confident,
+                        "processed_at": processed_at,
+                    },
                 },
-            },
-            status=status.HTTP_200_OK,
-        ))
+                status=status.HTTP_200_OK,
+            )
+        )

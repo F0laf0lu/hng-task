@@ -24,13 +24,14 @@ def _error(message, status_code):
 def _paginate(queryset, page, limit):
     total = queryset.count()
     offset = (page - 1) * limit
-    items = queryset[offset: offset + limit]
+    items = queryset[offset : offset + limit]
     return total, items
 
 
 # ---------------------------------------------------------------------------
 # Views
 # ---------------------------------------------------------------------------
+
 
 class ProfileListCreateView(APIView):
     def post(self, request, *args, **kwargs):
@@ -99,7 +100,9 @@ class ProfileListCreateView(APIView):
                 try:
                     raw_params[field] = cast(val)
                 except (ValueError, TypeError):
-                    return _error(f"'{field}' must be a valid number", status.HTTP_422_UNPROCESSABLE_ENTITY)
+                    return _error(
+                        f"'{field}' must be a valid number", status.HTTP_422_UNPROCESSABLE_ENTITY
+                    )
 
         for field in ("gender", "age_group", "country_id"):
             val = request.query_params.get(field)
