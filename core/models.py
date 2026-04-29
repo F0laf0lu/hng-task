@@ -8,23 +8,23 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 class UserManager(BaseUserManager):
-    
+
     def create_user(self, email, password=None, **extra_fields):
         if email is None:
             raise ValueError("Email is required")
-        
+
         email = self.normalize_email(email)
         user = self.model(email=email, **self.extra)
         user.set_password()
         user.save(using=self._db)
         return user
-    
+
 
 
 
 
 class User(AbstractUser):
-    
+
     class UserRole(models.TextChoices):
         ADMIN = "ADMIN"
         ANALYST = "ANALYST"
@@ -62,5 +62,3 @@ class Profile(models.Model):
 
     def __str__(self):
         return self.name
-
-

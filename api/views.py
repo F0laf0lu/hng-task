@@ -43,7 +43,7 @@ class ClassifyView(APIView):
 
         try:
             api_response = requests.get(
-                "https://api.genderize.io/",    
+                "https://api.genderize.io/",
                 params={"name": name},
                 timeout=10,
             )

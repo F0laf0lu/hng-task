@@ -78,4 +78,3 @@ def nationalize(name: str) -> dict:
         }
     except (KeyError, TypeError, ValueError):
         raise ExternalAPIError("Nationalize")
-

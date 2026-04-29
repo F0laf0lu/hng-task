@@ -1,0 +1,20 @@
+[tool.black]
+line-length = 100
+target-version = ['py312', 'py313']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # Exclude these directories
+
+  | migrations
+  | venv
+  | env
+
+  | .venv
+  | .git
+  | __pycache__
+
+  | build
+  | dist
+)/
+'''
