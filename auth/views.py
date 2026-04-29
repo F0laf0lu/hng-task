@@ -1,15 +1,16 @@
 import base64
-import string
-import secrets
 import hashlib
 import random
-from django.utils import timezone
+import secrets
+import string
+
 import requests
-from django.shortcuts import redirect
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import serializers, status
 from django.contrib.auth import get_user_model
+from django.shortcuts import redirect
+from django.utils import timezone
+from rest_framework import serializers, status
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 User = get_user_model()
 

@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 from core.models import Profile
 from core.serializers import ProfileSerializer
 from core.services import ExternalAPIError, agify, genderize, nationalize
-from core.utils import parse_nl_query, parse_pagination, parse_sorting, apply_filters
+from core.utils import apply_filters, parse_nl_query, parse_pagination, parse_sorting
 
 # ---------------------------------------------------------------------------
 # Helpers

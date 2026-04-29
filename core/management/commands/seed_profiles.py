@@ -1,5 +1,7 @@
 import json
+
 from django.core.management.base import BaseCommand
+
 from core.models import Profile  # Update this with your app/model name
 
 
