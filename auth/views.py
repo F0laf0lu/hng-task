@@ -40,6 +40,8 @@ CODE_CHALLENGE = base64.urlsafe_b64encode(sha256_hash).decode("utf-8").replace("
 
 
 class AuthView(APIView):
+    throttle_scope = "auth"
+
     def get(self, request, *args, **kwargs):
 
         return redirect(
@@ -62,6 +64,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class GithubCallBackView(APIView):
+    throttle_scope = "auth"
+
     def get(self, request, *args, **kwargs):
         auth_code = request.query_params.get("code")
         state = request.query_params.get("state", None)
@@ -147,6 +151,7 @@ class GithubCallBackView(APIView):
 
 
 class RefreshTokenView(APIView):
+    throttle_scope = "auth"
     authentication_classes = []
     permission_classes = [permissions.AllowAny()]
 
@@ -199,6 +204,8 @@ class RefreshTokenView(APIView):
 
 
 class LogoutView(APIView):
+    throttle_scope = "auth"
+
     def post(self, request):
         refresh_token = request.data.get("refresh_token", None)
         if refresh_token is None:

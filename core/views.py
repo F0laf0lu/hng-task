@@ -44,6 +44,7 @@ def _paginate(queryset, page, limit, path):
 
 
 class ProfileListCreateView(APIView):
+    throttle_scope = "profile"
     permission_classes = [CanCreateProfile]
 
     def post(self, request, *args, **kwargs):
@@ -155,6 +156,7 @@ class ProfileListCreateView(APIView):
 
 
 class ProfileSearchView(APIView):
+    throttle_scope = "profile"
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
@@ -200,6 +202,7 @@ class ProfileSearchView(APIView):
 
 
 class ProfileDetailView(APIView):
+    throttle_scope = "profile"
     permission_classes = [CanUpdateProfile]
 
     def _get_object(self, id):

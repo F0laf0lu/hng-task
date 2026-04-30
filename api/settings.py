@@ -133,6 +133,10 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "auth.authenticate.CustomAuthentication",
     ],
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.ScopedRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {"auth": "10/minute", "profile": "60/minute"},
 }
 
 AUTH_USER_MODEL = "core.User"
